@@ -1,20 +1,61 @@
-name: CI
+name: Train Zork RL Model on Tencent Cloud
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  test:
+  train:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: Run tests
-      run: |
-        python -m pytest tests/
+      # 检出代码
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 设置 Python 环境
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # 安装腾讯云 CLI
+      - name: Install Tencent Cloud CLI
+        run: |
+          pip install tccli
+
+      # 配置腾讯云凭证
+      - name: Configure Tencent Cloud Credentials
+        run: |
+          tccli configure set secretId ${{ secrets.TENCENTCLOUD_SECRET_ID }}
+          tccli configure set secretKey ${{ secrets.TENCENTCLOUD_SECRET_KEY }}
+          tccli configure set region ap-guangzhou
+
+      # 启动 GPU 云服务器
+      - name: Start Tencent Cloud CVM
+        run: |
+          tccli cvm StartInstances --InstanceIds ${{ secrets.TENCENTCLOUD_CVM_INSTANCE_ID }}
+
+      # 将 SSH 密钥写入临时文件
+      - name: Write SSH Key
+        run: |
+          echo "${{ secrets.TENCENTCLOUD_SSH_KEY }}" > ssh_key.pem
+          chmod 600 ssh_key.pem
+
+      # 部署代码到云服务器
+      - name: Deploy to Tencent Cloud CVM
+        run: |
+          scp -i ssh_key.pem -o StrictHostKeyChecking=no -r . ubuntu@<cvm-public-ip>:/home/ubuntu/zork-rl-training
+          ssh -i ssh_key.pem -o StrictHostKeyChecking=no ubuntu@<cvm-public-ip> "
+            cd /home/ubuntu/zork-rl-training &&
+            pip install -r requirements.txt &&
+            python train.py --env zork1.z5 --model 7b --output-dir cos://my-zork-bucket/output/
+          "
+
+      # 停止云服务器（节省成本）
+      - name: Stop Tencent Cloud CVM
+        run: |
+          tccli cvm StopInstances --InstanceIds ${{ secrets.TENCENTCLOUD_CVM_INSTANCE_ID }}
