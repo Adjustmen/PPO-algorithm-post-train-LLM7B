@@ -26,36 +26,42 @@ jobs:
       - name: Install Tencent Cloud CLI
         run: |
           pip install tccli
-
+          tccli --version
+      - name: Install Tencent Cloud CLI
+        run: |
+          pip install tccli
       # 配置腾讯云凭证
       - name: Configure Tencent Cloud Credentials
         run: |
           tccli configure set secretId ${{ secrets.TENCENTCLOUD_SECRET_ID }}
           tccli configure set secretKey ${{ secrets.TENCENTCLOUD_SECRET_KEY }}
-
+          tccli configure set region ap-guangzhou
+          # 测试凭证
+          tccli cvm DescribeInstances --InstanceIds ${{ secrets.TENCENTCLOUD_CVM_INSTANCE_ID }} || { echo "Credential or Instance ID error"; exit 1; }
 
       # 启动 GPU 云服务器
       - name: Start Tencent Cloud CVM
         run: |
-          tccli cvm StartInstances --InstanceIds ${{ secrets.TENCENTCLOUD_CVM_INSTANCE_ID }}
+          tccli cvm StartInstances --InstanceIds ${{ secrets.TENCENTCLOUD_CVM_INSTANCE_ID }} || { echo "Failed to start CVM"; exit 1; }
 
       # 将 SSH 密钥写入临时文件
       - name: Write SSH Key
         run: |
           echo "${{ secrets.TENCENTCLOUD_SSH_KEY }}" > ssh_key.pem
           chmod 600 ssh_key.pem
+          cat ssh_key.pem # 调试：输出密钥内容（注意：仅用于调试，生产环境中移除）
 
       # 部署代码到云服务器
       - name: Deploy to Tencent Cloud CVM
         run: |
-          scp -i ssh_key.pem -o StrictHostKeyChecking=no -r . ubuntu@<cvm-public-ip>:/home/ubuntu/zork-rl-training
+          scp -i ssh_key.pem -o StrictHostKeyChecking=no -r . ubuntu@<cvm-public-ip>:/home/ubuntu/zork-rl-training || { echo "SCP failed"; exit 1; }
           ssh -i ssh_key.pem -o StrictHostKeyChecking=no ubuntu@<cvm-public-ip> "
             cd /home/ubuntu/zork-rl-training &&
             pip install -r requirements.txt &&
             python train.py --env zork1.z5 --model 7b --output-dir cos://my-zork-bucket/output/
-          "
+          " || { echo "SSH execution failed"; exit 1; }
 
       # 停止云服务器（节省成本）
       - name: Stop Tencent Cloud CVM
         run: |
-          tccli cvm StopInstances --InstanceIds ${{ secrets.TENCENTCLOUD_CVM_INSTANCE_ID }}
+          tccli cvm StopInstances --InstanceIds ${{ secrets.TENCENTCLOUD_CVM_INSTANCE_ID }} || { echo "Failed to stop CVM"; exit 1; }
