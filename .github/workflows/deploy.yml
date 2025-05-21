@@ -27,9 +27,10 @@ jobs:
         run: |
           pip install tccli
           tccli --version
-      - name: Install Tencent Cloud CLI
+      - name: Debug Secrets
         run: |
-          pip install tccli
+          e  cho "Secret ID: ${#TENCENTCLOUD_SECRET_ID} chars"
+          echo "Secret Key: ${#TENCENTCLOUD_SECRET_KEY} chars"
       # 配置腾讯云凭证
       - name: Configure Tencent Cloud Credentials
         run: |
