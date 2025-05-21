@@ -35,7 +35,7 @@ jobs:
         run: |
           tccli configure set secretId ${{ secrets.TENCENTCLOUD_SECRET_ID }}
           tccli configure set secretKey ${{ secrets.TENCENTCLOUD_SECRET_KEY }}
-          tccli configure set region ap-guangzhou
+          tccli configure set region ap-shanghai
           # 测试凭证
           tccli cvm DescribeInstances --InstanceIds ${{ secrets.TENCENTCLOUD_CVM_INSTANCE_ID }} || { echo "Credential or Instance ID error"; exit 1; }
 
