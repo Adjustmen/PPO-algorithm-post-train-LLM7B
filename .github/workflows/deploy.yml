@@ -34,11 +34,11 @@ jobs:
       # 配置腾讯云凭证
       - name: Configure Tencent Cloud Credentials
         run: |
-          tccli configure set ${{ secrets.TENCENTCLOUD_SECRET_ID }}
-          tccli configure set ${{ secrets.TENCENTCLOUD_SECRET_KEY }}
+          tccli configure set ${{Secrets.TENCENTCLOUD_SECRET_ID}}
+          tccli configure set ${{Secrets.TENCENTCLOUD_SECRET_KEY}}
           tccli configure set ap-shanghai
           # 测试凭证
-
+          tccli cvm DescribeInstances --InstanceIds ${{ secrets.TENCENTCLOUD_CVM_INSTANCE_ID }} || { echo "Credential or Instance ID error"; exit 1; }
       # 启动 GPU 云服务器
       - name: Start Tencent Cloud CVM
         run: |
