@@ -32,7 +32,7 @@ jobs:
         run: |
           tccli configure set secretId ${{ secrets.TENCENTCLOUD_SECRET_ID }}
           tccli configure set secretKey ${{ secrets.TENCENTCLOUD_SECRET_KEY }}
-          tccli configure set region ap-guangzhou
+
 
       # 启动 GPU 云服务器
       - name: Start Tencent Cloud CVM
