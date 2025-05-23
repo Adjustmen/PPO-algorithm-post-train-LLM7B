@@ -34,8 +34,8 @@ jobs:
       # 配置腾讯云凭证
       - name: Configure Tencent Cloud Credentials
         run: |
-          tccli configure set secretId AKIDBF5g3C6lCVZs1wtjQI0VnqfFckeNsAE4
-          tccli configure set secretKey fleIjvuf7NPCk6ECvQhkZDi04tToulNk
+          tccli configure set secretId 
+          tccli configure set secretKey 
           tccli configure set region ap-shanghai
           # 测试凭证
           tccli cvm DescribeInstances --InstanceIds ${{secrets.TENCENTCLOUD_CVM_INSTANCE_ID}} || {echo "Credential or Instance ID error"; exit 1;}
@@ -47,7 +47,7 @@ jobs:
       # 将 SSH 密钥写入临时文件
       - name: Write SSH Key
         run: |
-          echo "Xxwj0424" > ssh_key.pem
+          echo "" > ssh_key.pem
           chmod 600 ssh_key.pem
           cat ssh_key.pem # 调试：输出密钥内容（注意：仅用于调试，生产环境中移除）
 
