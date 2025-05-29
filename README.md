@@ -6,14 +6,23 @@ Trained with the PPO algorithm, quantized and fine-tuned with Lora, the 7B large
 
 ## 项目基本流程
 
-**1** 腾讯云服务器的讲 
+**1、腾讯云服务器的配置**
 
 （1）注册腾讯云服务器
+
 （2）创建云服务实例
+
 （3）登录服务器
 
 ```
 ssh ubuntu@<公网IP>  # Ubuntu系统默认用户为ubuntu
 ```
+输入密码或使用密钥对认证。
 
-**2** 
+**2、安装需要的依赖** 
+
+```
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y git wget curl python3-pip python3-dev nvidia-driver-510 nvidia-cuda-toolkit  # GPU驱动和CUDA
+```
+
