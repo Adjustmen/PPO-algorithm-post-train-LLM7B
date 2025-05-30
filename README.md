@@ -78,3 +78,51 @@ agent、PPO、量化和lora微调的代码均放置在experience文件夹中
 **实验中进行的参数的改进**
 - PPO算法的改进
 - Lora微调参数改进
+
+**（1）PPO算法参数调优**
+```
+  class AdvancedPPOTrainer:
+    def __init__(self, ...):
+        # 动态调整的超参数
+        self.kl_coef = 0.2       # KL惩罚系数（初始值）
+        self.clip_range = 0.2    # 策略裁剪范围
+        self.gamma = 0.99        # 折扣因子
+        self.lam = 0.95          # GAE系数
+        self.entropy_coef = 0.01 # 熵奖励系数
+        
+    def update(self, samples):
+        # 动态调整KL系数
+        if self.kl_mean > 0.03:  # 监控KL散度
+            self.kl_coef *= 1.5
+        elif self.kl_mean < 0.01:
+            self.kl_coef *= 0.8
+        
+        # 自适应clip_range
+        self.clip_range = max(0.1, 0.2 * (1 - self.update_step/1e5))
+```
+参数改进的说明：
+
+1、动态KL控制：根据实际KL散度动态调整惩罚系数，避免策略过早收敛
+
+2、精细微调：随着训练进行逐步减小clip_range，后期微调更精细
+
+3、熵奖励衰减：在训练后期降低熵系数，增强确定性
+
+算法内部改进：
+
+1、算法中增加了优势标准化和clip值函数
+```
+advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+vf_loss = torch.max(
+    (values - returns) ** 2,
+    (values_clipped - returns) ** 2
+)
+```
+2、增加平滑正则化策略
+```
+old_probs = torch.exp(old_log_probs)
+new_probs = torch.exp(log_probs)
+js_div = 0.5 * (kl_div(old_probs, (old_probs+new_probs)/2) + 
+                kl_div(new_probs, (old_probs+new_probs)/2))
+loss += 0.1 * js_div
+```
