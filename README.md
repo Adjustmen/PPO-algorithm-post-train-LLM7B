@@ -56,4 +56,22 @@ import jericho
 env = jericho.FrotzEnv("zork1.z5")  # 需下载游戏文件（如zork1.z5）
 ```
 
-**4、**
+**4、加载大模型llm-7B**
+
+安装库
+```
+pip install transformers torch accelerate
+```
+
+下载7B的大模型
+```
+from transformers import AutoModelForCausalLM, AutoTokenizer
+model = AutoModelForCausalLM.from_pretrained("decapoda-research/llama-7b-hf")
+tokenizer = AutoTokenizer.from_pretrained("decapoda-research/llama-7b-hf")
+```
+
+**5、实现RL框架**
+
+在实验过程中最终选择PPO算法并且在进行量化和lora微调的情况下来实现大模型的训练；
+agent、PPO、量化和lora微调的代码均放置在experience文件夹中
+**实验中进行的参数的改进**
