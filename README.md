@@ -126,3 +126,22 @@ js_div = 0.5 * (kl_div(old_probs, (old_probs+new_probs)/2) +
                 kl_div(new_probs, (old_probs+new_probs)/2))
 loss += 0.1 * js_div
 ```
+
+**模型架构**
+在这个模型中，我们一共创建了八个类，分别是：
+
+- env，环境类，提供游戏的基本环境、游戏玩家（智能体）从该类中或许必要的信息
+
+- agent 智能体，相当于游戏玩家
+
+- action_precdure 表示智能体下一步所需要走的动作是前往哪里，内部调用了奖励函数，来评估每一步的token值是多少
+
+- rewards 设计的奖励函数，通过设计不同的行为给予奖励或惩罚
+
+- config 设置游戏配置，训练环境的配置和DQN算法训练的配置
+
+- lora_comple and lora introduction表示为lora微调的参数设置
+
+- PPO_loss，PPO算法的训练函数，通过改变参数增强算法的适用性
+
+- optimize 量化函数， 
