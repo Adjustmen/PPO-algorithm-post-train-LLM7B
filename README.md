@@ -23,6 +23,37 @@ ssh ubuntu@<公网IP>  # Ubuntu系统默认用户为ubuntu
 
 ```
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y git wget curl python3-pip python3-dev nvidia-driver-510 nvidia-cuda-toolkit  # GPU驱动和CUDA
+```
+**2、配置python环境**
+
+安装minconda
+
+```
+wget https://repo.anaconda.com/miniconda/MiniConda3-latest-Linux-x86_64.sh
+bash MiniConda3-latest-Linux-x86_64.sh
+source ~/.bashrc
+```
+创建虚拟环境
+
+```
+conda create -n llm_rl python=3.9
+conda activate llm_rl
 ```
 
+**3、部署zork环境**
+
+安装joerich框架
+
+```
+git clone https://github.com/Microsoft/jericho.git
+cd jericho
+pip install -e .
+```
+测试zork环境
+
+```
+import jericho
+env = jericho.FrotzEnv("zork1.z5")  # 需下载游戏文件（如zork1.z5）
+```
+
+**4、**
