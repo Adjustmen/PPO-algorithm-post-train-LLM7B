@@ -74,4 +74,7 @@ tokenizer = AutoTokenizer.from_pretrained("decapoda-research/llama-7b-hf")
 
 在实验过程中最终选择PPO算法并且在进行量化和lora微调的情况下来实现大模型的训练；
 agent、PPO、量化和lora微调的代码均放置在experience文件夹中
+
 **实验中进行的参数的改进**
+- PPO算法的改进
+- Lora微调参数改进
