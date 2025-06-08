@@ -147,3 +147,98 @@ loss += 0.1 * js_div
 - optimize 量化函数， 节约显存提高效率；
 
 ## 实现过程
+交互数据的收集
+```
+from jericho import FrotzEnv
+
+def collect_trajectories(env_path="zork1.z5", num_episodes=10):
+    env = FrotzEnv(env_path)
+    trajectories = []
+    
+    for _ in range(num_episodes):
+        obs = env.reset()
+        done = False
+        episode = []
+        
+        while not done:
+            action = input(f"Obs: {obs}\nYour action: ") 
+            new_obs, reward, done, _ = env.step(action)
+            episode.append((obs, action, reward))
+            obs = new_obs
+            
+        trajectories.append(episode)
+    return trajectories
+```
+lora微调
+```
+from peft import LoraConfig, get_peft_model
+
+lora_config = LoraConfig(
+    r=8,                  
+    lora_alpha=32,        
+    target_modules=["q_proj", "v_proj"], 
+    lora_dropout=0.05,
+    bias="none"
+)
+
+model = AutoModelForCausalLM.from_pretrained("llm7b")
+model = get_peft_model(model, lora_config)
+model.print_trainable_parameters() 
+```
+采用8-bit量化减少显存开销
+```
+from transformers import BitsAndBytesConfig
+
+quant_config = BitsAndBytesConfig(
+    load_in_8bit=True,
+    llm_int8_threshold=6.0  # 过滤大数值异常值
+)
+
+quantized_model = AutoModelForCausalLM.from_pretrained(
+    "./fine_tuned_model",
+    quantization_config=quant_config,
+    device_map="auto"
+)
+```
+PPO算法配置和奖励函数的设置
+具体参数值需要在运行中能够得到最佳参数
+```
+    batch_size
+    learning_rate
+    ppo_epochs
+    clip_range
+    gamma
+    gae_lambda
+    target_kl
+    seed
+```
+在训练过程反复调整学习率和熵系数
+```
+from trl import PPOTrainer
+
+ppo_trainer = PPOTrainer(
+    model=model,
+    config=ppo_config,
+    tokenizer=tokenizer
+)
+
+for epoch in range(100):
+    # 生成动作
+    queries = [env.reset() for _ in range(ppo_config.batch_size)]
+    responses = [model.generate(q, max_length=20) for q in queries]
+    
+    # 环境执行
+    rewards = []
+    for action in responses:
+        _, r, done, _ = env.step(action)
+        rewards.append(r + 0.1 * calculate_curiosity(env.state))  # 自定义奖励
+        
+    # PPO 更新
+    stats = ppo_trainer.step(queries, responses, rewards)
+    
+    # 日志记录
+    if epoch % 10 == 0:
+        print(f"Epoch {epoch}: Avg Reward = {np.mean(rewards):.2f}")
+        model.save_pretrained(f"./checkpoints/epoch_{epoch}")
+```
+模型性能评估和优化
